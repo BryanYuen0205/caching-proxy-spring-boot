@@ -24,12 +24,14 @@ public class CachingProxyApplication {
 
     private final RestTemplate restTemplate;
     private final String originBaseUrl;
-    private final Map<String, CachedResponse> cache = new ConcurrentHashMap<>();
+    private final CacheService cacheService;
 
     public CachingProxyApplication(RestTemplate restTemplate,
-                                   @Value("${proxy.origin}") String originBaseUrl) {
+                                   @Value("${proxy.origin}") String originBaseUrl,
+                                   CacheService cacheService) {
         this.restTemplate = restTemplate;
         this.originBaseUrl = originBaseUrl;
+        this.cacheService = cacheService;
     }
 
     @GetMapping("/hello")
@@ -46,7 +48,7 @@ public class CachingProxyApplication {
         String targetUrl = buildTargetUrl(path, queryParams);
         long start = System.currentTimeMillis();   // start timer
         String cacheKey = "GET " + targetUrl;
-        CachedResponse cached = cache.get(cacheKey);
+        CachedResponse cached = cacheService.get(cacheKey);
 
         if(cached != null){
             HttpHeaders headers = new HttpHeaders(cached.getHeaders());
@@ -80,7 +82,7 @@ public class CachingProxyApplication {
                 response.getHeaders(),
                 response.getBody()
         );
-        cache.put(cacheKey, toCache);
+        cacheService.put(cacheKey, toCache);
 
         HttpHeaders responseHeaders = new HttpHeaders(response.getHeaders());
         responseHeaders.set("X-Cache", "MISS");
@@ -119,7 +121,7 @@ public class CachingProxyApplication {
 
     @PostMapping("/admin/clear-cache")
     public String clearCache() {
-        cache.clear();
-        return "Cache cleared. Entries now: " + cache.size();
+        cacheService.clearAll();
+        return "Cache cleared. Entries now: " + cacheService.getSize();
     }
 }

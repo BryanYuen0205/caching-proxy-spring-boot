@@ -20,9 +20,16 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'info.picocli:picocli:4.7.7'
+    implementation 'info.picocli:picocli-spring-boot-starter:4.7.7'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+bootJar {
+    mainClass = 'com.example.demo.Bootstrap'
+}
+
 
 tasks.named('test') {
 	useJUnitPlatform()
